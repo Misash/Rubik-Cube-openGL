@@ -26,8 +26,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1000;
+const unsigned int SCR_HEIGHT = 1000;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -137,6 +137,8 @@ int main()
 	// #################################  END WINDOW #################################
 
 
+    // ################################ VAO/VBO #########################################
+
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
@@ -147,84 +149,136 @@ int main()
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
-    float vertices[] = {
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-            0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+   float vertices[] = {
+        // Cara frontal
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
+        0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  // Vértice inferior derecho
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // Vértice superior izquierdo
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
 
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        // Cara posterior
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // Vértice inferior derecho
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // Vértice superior izquierdo
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
 
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        // Cara izquierda
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // Vértice superior derecho
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // Vértice superior izquierdo
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice inferior derecho
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // Vértice superior derecho
 
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        // Cara derecha
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior izquierdo
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  // Vértice inferior derecho
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  // Vértice inferior derecho
+        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  // Vértice inferior izquierdo
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior izquierdo
 
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        // Cara inferior
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  // Vértice inferior derecho
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice superior izquierdo
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
 
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+        // Cara superior
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice inferior derecho
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, // Vértice superior izquierdo
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f  // Vértice inferior izquierdo
     };
-    Rubik rubik;
+
+   glm::vec3 cubePositions[] = {
+        // Vértices superiores
+        // Coordenadas x, y, z
+        glm::vec3(0.0f, 1.25f, 0.0f),        // Vértice 0
+        glm::vec3(1.25f, 1.25f, 0.0f),      // Vértice 1
+        glm::vec3(-1.25f, 1.25f, 0.0f),     // Vértice 2
+        glm::vec3(0.0f, 1.25f, -1.25f),     // Vértice 3
+        glm::vec3(1.25f, 1.25f, -1.25f),    // Vértice 4
+        glm::vec3(-1.25f, 1.25f, -1.25f),   // Vértice 5
+        glm::vec3(0.0f, 1.25f, 1.25f),      // Vértice 6
+        glm::vec3(1.25f, 1.25f, 1.25f),     // Vértice 7
+        glm::vec3(-1.25f, 1.25f, 1.25f),    // Vértice 8
+
+        // Vértices medios
+        // Coordenadas x, y, z
+        glm::vec3(0.0f, 0.0f, 0.0f),        // Vértice 9 CENTRO
+        glm::vec3(1.25f, 0.0f, 0.0f),       // Vértice 10 
+        glm::vec3(-1.25f, 0.0f, 0.0f),      // Vértice 11
+        glm::vec3(0.0f, 0.0f, -1.25f),      // Vértice 12
+        glm::vec3(1.25f, 0.0f, -1.25f),     // Vértice 13
+        glm::vec3(-1.25f, 0.0f, -1.25f),    // Vértice 14
+        glm::vec3(0.0f, 0.0f, 1.25f),       // Vértice 15
+        glm::vec3(1.25f, 0.0f, 1.25f),      // Vértice 16
+        glm::vec3(-1.25f, 0.0f, 1.25f),     // Vértice 17
+
+        // Vértices inferiores
+        // Coordenadas x, y, z
+        glm::vec3(0.0f, -1.25f, 0.0f),       // Vértice 18
+        glm::vec3(1.25f, -1.25f, 0.0f),      // Vértice 19
+        glm::vec3(-1.25f, -1.25f, 0.0f),     // Vértice 20
+        glm::vec3(0.0f, -1.25f, -1.25f),     // Vértice 21
+        glm::vec3(1.25f, -1.25f, -1.25f),    // Vértice 22
+        glm::vec3(-1.25f, -1.25f, -1.25f),   // Vértice 23
+        glm::vec3(0.0f, -1.25f, 1.25f),      // Vértice 24
+        glm::vec3(1.25f, -1.25f, 1.25f),     // Vértice 25
+        glm::vec3(-1.25f, -1.25f, 1.25f)     // Vértice 26
+    };
+
+
+
+
+    // ################# VERTICES SHADERS ##########################################
 
     // world space positions of our cubes
+    // identificadores
+    unsigned int VBO, VAO;// id buffer ->id vertices 
+    glGenVertexArrays(1, &VAO); // 1 arreglo de verices  asigna a VAO
+    glGenBuffers(1, &VBO);// 1 arreglo de buffer de vertices y asigna a VBO
 
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
+    //enlace VAO y VBO para configuraciones
     glBindVertexArray(VAO);
-
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //se envia vertices a VBO
 
-    // position attribute
+    // atributo de posiciones en el shader
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    // texture coord attribute
+    // atributo de coordenadas de textura de los vertices en el shader
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    // ################# END VERTICES SHADERS ##########################################
 
 
 
+    // ################ TEXTURAS ##########################################################
     // load and create a texture
-    // -------------------------
-    unsigned int texture1, texture2;
-    // texture 1
-    // ---------
-    glGenTextures(1, &texture1);
-    glBindTexture(GL_TEXTURE_2D, texture1);
+    unsigned int texture1, texture2;//ids para las texturas
+
+    // texture 1 
+    glGenTextures(1, &texture1);//id
+    glBindTexture(GL_TEXTURE_2D, texture1);// se puede hacer  operaciones con textura
+
     // set the texture wrapping parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // set texture filtering parameters
+    // set texture filtering parameters SUAVIZADO
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
     // load image, create texture and generate mipmaps
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
@@ -239,8 +293,9 @@ int main()
         std::cout << "Failed to load texture" << std::endl;
     }
     stbi_image_free(data);
+
+
     // texture 2
-    // ---------
     glGenTextures(1, &texture2);
     glBindTexture(GL_TEXTURE_2D, texture2);
     // set the texture wrapping parameters
@@ -266,40 +321,34 @@ int main()
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     // -------------------------------------------------------------------------------------------
     ourShader.use();
-    ourShader.setInt("texture1", 0);
+    ourShader.setInt("texture1", 0);//indices de textura
     ourShader.setInt("texture2", 1);
 
     // pass projection matrix to shader (as projection matrix rarely changes there's no need to do this per frame)
-    // -----------------------------------------------------------------------------------------------------------
+    // trasnsforma 3d -> 2D: carga los idetntificadores de textura en la matriz para q se pueda renderizar
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     ourShader.setMat4("projection", projection);
 
+    //################################# END TEXTURAS ######################################################################
 
-    // render loop
-    // -----------
+
     while (!glfwWindowShouldClose(window))
     {
-        // per-frame time logic
-        // --------------------
+        //calcula tiempo transcurrido en cada frame
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
         // input
-        // -----
         processInput(window);
 
-
-        // render
-        // ------
+        // color para la pantalla de color 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//clear buffer
 
         // bind textures on corresponding texture units
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
+        glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, texture2);
 
         // activate shader
         ourShader.use();
@@ -312,8 +361,9 @@ int main()
 //        view = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 //        ourShader.setMat4("view", view);
         // activate shader
-        ourShader.use();
+        // ourShader.use();
 
+        // ############## MATRICES #######################################################
         // pass projection matrix to shader (note that in this case it could change every frame)
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         ourShader.setMat4("projection", projection);
@@ -321,13 +371,15 @@ int main()
         // camera/view transformation
         glm::mat4 view = camera.GetViewMatrix();
         ourShader.setMat4("view", view);
-        // render boxes
+         // ############## END MATRICES ###################################################
+
+        // ################ CUBES RENDER ###################################################
         glBindVertexArray(VAO);
         for (unsigned int i = 0; i < 27; i++)
         {
             // calculate the model matrix for each object and pass it to shader before drawing
             glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, rubik.cubePositions[i]);
+            model = glm::translate(model, cubePositions[i]);
             //float angle = 20.0f * i;
             //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             ourShader.setMat4("model", model);
@@ -335,8 +387,9 @@ int main()
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
+         // ################ END CUBES RENDER ##################################################
+
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
