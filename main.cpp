@@ -21,10 +21,7 @@
 
 using namespace std;
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
+
 
 // settings
 const unsigned int SCR_WIDTH = 1000;
@@ -78,11 +75,14 @@ class Cube{
     glm::mat4 projection;
     Shader* ourShader;
     float vertices[180];
+    glm::mat4 model;
 
     Cube(float x,float y,float z){
         //center
         center = new glm::vec3(x,y,z);
         ourShader = new Shader(getPath("shader.vs").c_str(), getPath("shader.fs").c_str());
+        model = glm::mat4(1.0f); 
+        model = glm::translate(model, *center);
 
         float vertices_[] = {
             // Cara frontal
@@ -134,10 +134,8 @@ class Cube{
             -0.5f,  0.5f, -0.5f,  0.0f, 1.0f  // Vértice inferior izquierdo
         };
 
-        for (int i = 0; i < 180; i++)
-        {
-            vertices[i]= vertices_[i];
-        }
+        
+         std::memcpy(vertices, vertices_, sizeof(vertices));
         
     }
 
@@ -145,25 +143,20 @@ class Cube{
     void configShader_Textures(){
         setShaders();
         setTextures();
+        setProjection();
     }
 
+
+
     void draw(){
-        // activate shader
-        ourShader->use();
-
-        // pass projection matrix to shader (note that in this case it could change every frame)
-        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        ourShader->setMat4("projection", projection);
-
-        glBindVertexArray(VAO);
-
-        // camera/view transformation
+    
+             // camera/view transformation
         glm::mat4 view = camera.GetViewMatrix();
         ourShader->setMat4("view", view);
-     
+
         // calculate the model matrix for each object and pass it to shader before drawing
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, *center);
+        // glm::mat4 model = glm::mat4(1.0f);
+       
         ourShader->setMat4("model", model);
 
         // bind textures on corresponding texture units
@@ -175,7 +168,17 @@ class Cube{
         }
     }
 
-    
+    void setProjection(){
+        // activate shader
+        ourShader->use();
+
+        // pass projection matrix to shader (note that in this case it could change every frame)
+        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        ourShader->setMat4("projection", projection);
+
+        glBindVertexArray(VAO);
+   
+    }
 
     void setShaders(){
         glGenVertexArrays(1, &VAO);
@@ -201,7 +204,7 @@ class Cube{
     void setTextures(){
         // Cargar las texturas
         glGenTextures(6, textures);
-        string fileNames[] = {"orange.jpg","red.jpg","yellow.jpg","green.jpg","blue.jpg","white.jpg"};
+        string fileNames[] = {"green_.jpg","pink.jpg","yellow.jpg","white.jpg","blue.jpg","red.jpg"};
         for (int i = 0; i < 6; i++) {
             loadTexture(getPath(fileNames[i]),textures[i]);
         }
@@ -230,7 +233,9 @@ class Cube{
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
 
-    
+    void rotateX(float angle) {
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
+    }
 
     // ~Cube() {
     //     delete[] vertices;
@@ -298,9 +303,27 @@ public:
     }
 
 
+    ~Rubik() {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            for (int k = 0; k < depths; k++) {
+                delete cubes[i][j][k];
+            }
+        }
+    }
+}
+
+
 
 
 };
+
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+// void processInput(GLFWwindow *window);
+void processInput(GLFWwindow *window, Cube* cube);
 
 int main()
 {
@@ -346,17 +369,17 @@ int main()
     // build and compile our shader zprogram
     // ------------------------------------
 
-    Rubik rubikCube;
+    // Rubik rubikCube;
 
-    rubikCube.load_Shaders_Textures();
+    // rubikCube.load_Shaders_Textures();
 
-    // Cube cube(0.0f, 0.0f, 0.0f);
-    // Cube cube2(0.0f, 1.25f, 1.25f);
-    // Cube cube3(0.0f, -1.25f, 1.25f);
+    Cube cube(0.0f, 0.0f, 0.0f);
+    Cube cube2(0.0f, 1.25f, 1.25f);
+    Cube cube3(0.0f, -1.25f, 1.25f);
    
-    // cube.configShader_Textures();
-    // cube2.configShader_Textures();
-    // cube3.configShader_Textures();
+    cube.configShader_Textures();
+    cube2.configShader_Textures();
+    cube3.configShader_Textures();
 
     while (!glfwWindowShouldClose(window))
     {
@@ -366,18 +389,19 @@ int main()
         lastFrame = currentFrame;
 
         // input
-        processInput(window);
+        processInput(window,&cube);
 
         // color para la pantalla de color 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//clear buffer
 
 
-        // cube.draw();
-        // cube2.draw();
-        // cube3.draw();
+        
+        cube.draw();
+        cube2.draw();
+        cube3.draw();
 
-        rubikCube.draw();
+        // rubikCube.draw();
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -398,7 +422,7 @@ int main()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow *window,Cube* cube)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -411,6 +435,12 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
+         cube->rotateX(45.0f);
+        cout<<"\nrotate x";
+    }
+       
+       
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
