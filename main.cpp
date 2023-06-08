@@ -17,6 +17,7 @@
 #include "./Camera.h"
 #include <filesystem>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -68,34 +69,208 @@ string getPath(string filename){
 }
 
 
+class Cube{
+    public:
 
-struct Cube{
-    glm::vec3 *center;
+    glm::vec3* center;
+    unsigned int VBO, VAO;// id buffer ->id vertices 
+    unsigned int texture1, texture2;//ids para las texturas
+    glm::mat4 projection;
+    Shader* ourShader;
+    float vertices[180]; 
+
     Cube(float x,float y,float z){
+        //center
         center = new glm::vec3(x,y,z);
+        ourShader = new Shader(getPath("shader.vs").c_str(), getPath("shader.fs").c_str());
+
+        float vertices_[] = {
+            // Cara frontal
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
+            0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  // Vértice inferior derecho
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // Vértice superior izquierdo
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
+
+            // Cara posterior
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // Vértice inferior derecho
+            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // Vértice superior izquierdo
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
+
+            // Cara izquierda
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // Vértice superior derecho
+            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // Vértice superior izquierdo
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice inferior derecho
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // Vértice superior derecho
+
+            // Cara derecha
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior izquierdo
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  // Vértice inferior derecho
+            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  // Vértice inferior derecho
+            0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  // Vértice inferior izquierdo
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior izquierdo
+
+            // Cara inferior
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+            0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  // Vértice inferior derecho
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice superior izquierdo
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+
+            // Cara superior
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice inferior derecho
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
+            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, // Vértice superior izquierdo
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f  // Vértice inferior izquierdo
+        };
+
+        for (int i = 0; i < 180; i++)
+        {
+            vertices[i]= vertices_[i];
+        }
+        
     }
+
+    
+
+    void Config(){
+        setShaders();
+        setTextures();
+    }
+
+    void draw(){
+        // bind textures on corresponding texture units
+        glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, texture2);
+
+        // activate shader
+        ourShader->use();
+
+        // pass projection matrix to shader (note that in this case it could change every frame)
+        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        ourShader->setMat4("projection", projection);
+
+        glBindVertexArray(VAO);
+     
+        // calculate the model matrix for each object and pass it to shader before drawing
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, *center);
+        ourShader->setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+
+    
+
+    void setShaders(){
+        // world space positions of our cubes
+        // identificadores
+        glGenVertexArrays(1, &VAO); // 1 arreglo de verices  asigna a VAO
+        glGenBuffers(1, &VBO);// 1 arreglo de buffer de vertices y asigna a VBO
+        //enlace VAO y VBO para configuraciones
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //se envia vertices a VBO
+        // atributo de posiciones en el shader
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+        // atributo de coordenadas de textura de los vertices en el shader
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+    }
+
+    void setTextures(){
+        // Uso de la función loadTexture para cargar las texturas
+        texture1 = loadTexture(getPath("blue.jpg"));
+        texture2 = loadTexture(getPath("awesomeface.png"));
+
+        // Configuración de los uniformes de las texturas en el shader
+        ourShader->use();
+        ourShader->setInt("texture1", 0);
+        ourShader->setInt("texture2", 1);
+
+        // Pasar la matriz de proyección al shader
+        projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        ourShader->setMat4("projection", projection);
+    }
+
+
+    unsigned int loadTexture(const std::string& filePath){
+        unsigned int texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        // Set the texture wrapping parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        // Set texture filtering parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        // Load image, create texture, and generate mipmaps
+        int width, height, nrChannels;
+        stbi_set_flip_vertically_on_load(true);
+        unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            GLenum format = (nrChannels == 3) ? GL_RGB : GL_RGBA;
+            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
+        else
+        {
+            std::cout << "Failed to load texture: " << filePath << std::endl;
+        }
+        stbi_image_free(data);
+
+        return texture;
+    }
+
+    ~Cube() {
+        delete center;
+        delete[] vertices;
+    }
+
+
 };
 
 
 class Rubik {
 public:
-    float* vertices;
-    glm::vec3 cubePositions[27];
+
+    vector<vector<vector<Cube*>>> cubes;
+    int rows,cols,depths;
 
      Rubik(){
+        rows = cols = depths = 3;
+        cubes.resize(rows, vector<vector<Cube*>>(cols, vector<Cube*>(depths)));
 
-         float offset = 1.25f;
-         int index = 0;
-
-         for (float x = -offset; x <= offset; x += offset) {
-             for (float y = -offset; y <= offset; y += offset) {
-                 for (float z = -offset; z <= offset; z += offset) {
-                     cubePositions[index++] = glm::vec3(x, y, z);
+        float offset = 1.25f;
+        int i,j,k;
+        i = j = k = 0;
+         for (float y = offset; y >= -offset; y -= offset, i++){
+             j=0;
+             for (float x = -offset; x <= offset; x += offset,  j++){
+                  k=0;
+                 for (float z = offset; z >= -offset; z -= offset,  k++){
+                    cubes[i][j][k] = new Cube(x,y,z);
                  }
              }
          }
-
     }
+
+
+
 
 };
 
