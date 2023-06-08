@@ -143,7 +143,7 @@ class Cube{
 
     
 
-    void Config(){
+    void configShader_Textures(){
         setShaders();
         setTextures();
     }
@@ -161,6 +161,10 @@ class Cube{
         ourShader->setMat4("projection", projection);
 
         glBindVertexArray(VAO);
+
+        // camera/view transformation
+        glm::mat4 view = camera.GetViewMatrix();
+        ourShader->setMat4("view", view);
      
         // calculate the model matrix for each object and pass it to shader before drawing
         glm::mat4 model = glm::mat4(1.0f);
@@ -236,9 +240,12 @@ class Cube{
         return texture;
     }
 
+    
+
     ~Cube() {
-        delete center;
         delete[] vertices;
+        glDeleteVertexArrays(1, &VAO);
+        glDeleteBuffers(1, &VBO);
     }
 
 
@@ -320,192 +327,196 @@ int main()
 
     // build and compile our shader zprogram
     // ------------------------------------
-    Shader ourShader(getPath("shader.vs").c_str(), getPath("shader.fs").c_str());
+    Cube cube(0.0f, 0.0f, 0.0f);
+    Cube cube2(0.0f, 1.25f, 1.25f);
+    // Shader ourShader(getPath("shader.vs").c_str(), getPath("shader.fs").c_str());
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
-   float vertices[] = {
-        // Cara frontal
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
-        0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  // Vértice inferior derecho
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice superior derecho
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice superior derecho
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // Vértice superior izquierdo
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
+//    float vertices[] = {
+//         // Cara frontal
+//         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
+//         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,  // Vértice inferior derecho
+//         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+//         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+//         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // Vértice superior izquierdo
+//         -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
 
-        // Cara posterior
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // Vértice inferior derecho
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  // Vértice superior derecho
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  // Vértice superior derecho
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // Vértice superior izquierdo
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
+//         // Cara posterior
+//         -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
+//         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // Vértice inferior derecho
+//         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+//         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+//         -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // Vértice superior izquierdo
+//         -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
 
-        // Cara izquierda
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // Vértice superior derecho
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // Vértice superior izquierdo
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice inferior derecho
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // Vértice superior derecho
+//         // Cara izquierda
+//         -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // Vértice superior derecho
+//         -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // Vértice superior izquierdo
+//         -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+//         -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+//         -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice inferior derecho
+//         -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // Vértice superior derecho
 
-        // Cara derecha
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior izquierdo
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice superior derecho
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  // Vértice inferior derecho
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  // Vértice inferior derecho
-        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  // Vértice inferior izquierdo
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior izquierdo
+//         // Cara derecha
+//         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior izquierdo
+//         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice superior derecho
+//         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  // Vértice inferior derecho
+//         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  // Vértice inferior derecho
+//         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,  // Vértice inferior izquierdo
+//         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior izquierdo
 
-        // Cara inferior
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
-        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  // Vértice inferior derecho
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice superior izquierdo
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+//         // Cara inferior
+//         -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+//         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  // Vértice inferior derecho
+//         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
+//         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
+//         -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // Vértice superior izquierdo
+//         -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
 
-        // Cara superior
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice inferior derecho
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, // Vértice superior izquierdo
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f  // Vértice inferior izquierdo
-    };
+//         // Cara superior
+//         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // Vértice inferior izquierdo
+//         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,  // Vértice inferior derecho
+//         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
+//         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,  // Vértice superior derecho
+//         -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, // Vértice superior izquierdo
+//         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f  // Vértice inferior izquierdo
+//     };
 
-   glm::vec3 cubePositions[] = {
-        // Vértices superiores
-        // Coordenadas x, y, z
-        glm::vec3(0.0f, 1.25f, 0.0f),        // Vértice 0
-        glm::vec3(1.25f, 1.25f, 0.0f),      // Vértice 1
-        glm::vec3(-1.25f, 1.25f, 0.0f),     // Vértice 2
-        glm::vec3(0.0f, 1.25f, -1.25f),     // Vértice 3
-        glm::vec3(1.25f, 1.25f, -1.25f),    // Vértice 4
-        glm::vec3(-1.25f, 1.25f, -1.25f),   // Vértice 5
-        glm::vec3(0.0f, 1.25f, 1.25f),      // Vértice 6
-        glm::vec3(1.25f, 1.25f, 1.25f),     // Vértice 7
-        glm::vec3(-1.25f, 1.25f, 1.25f),    // Vértice 8
+//    glm::vec3 cubePositions[] = {
+//         // Vértices superiores
+//         // Coordenadas x, y, z
+//         glm::vec3(0.0f, 1.25f, 0.0f),        // Vértice 0
+//         glm::vec3(1.25f, 1.25f, 0.0f),      // Vértice 1
+//         glm::vec3(-1.25f, 1.25f, 0.0f),     // Vértice 2
+//         glm::vec3(0.0f, 1.25f, -1.25f),     // Vértice 3
+//         glm::vec3(1.25f, 1.25f, -1.25f),    // Vértice 4
+//         glm::vec3(-1.25f, 1.25f, -1.25f),   // Vértice 5
+//         glm::vec3(0.0f, 1.25f, 1.25f),      // Vértice 6
+//         glm::vec3(1.25f, 1.25f, 1.25f),     // Vértice 7
+//         glm::vec3(-1.25f, 1.25f, 1.25f),    // Vértice 8
 
-        // Vértices medios
-        // Coordenadas x, y, z
-        glm::vec3(0.0f, 0.0f, 0.0f),        // Vértice 9 CENTRO
-        glm::vec3(1.25f, 0.0f, 0.0f),       // Vértice 10 
-        glm::vec3(-1.25f, 0.0f, 0.0f),      // Vértice 11
-        glm::vec3(0.0f, 0.0f, -1.25f),      // Vértice 12
-        glm::vec3(1.25f, 0.0f, -1.25f),     // Vértice 13
-        glm::vec3(-1.25f, 0.0f, -1.25f),    // Vértice 14
-        glm::vec3(0.0f, 0.0f, 1.25f),       // Vértice 15
-        glm::vec3(1.25f, 0.0f, 1.25f),      // Vértice 16
-        glm::vec3(-1.25f, 0.0f, 1.25f),     // Vértice 17
+//         // Vértices medios
+//         // Coordenadas x, y, z
+//         glm::vec3(0.0f, 0.0f, 0.0f),        // Vértice 9 CENTRO
+//         glm::vec3(1.25f, 0.0f, 0.0f),       // Vértice 10 
+//         glm::vec3(-1.25f, 0.0f, 0.0f),      // Vértice 11
+//         glm::vec3(0.0f, 0.0f, -1.25f),      // Vértice 12
+//         glm::vec3(1.25f, 0.0f, -1.25f),     // Vértice 13
+//         glm::vec3(-1.25f, 0.0f, -1.25f),    // Vértice 14
+//         glm::vec3(0.0f, 0.0f, 1.25f),       // Vértice 15
+//         glm::vec3(1.25f, 0.0f, 1.25f),      // Vértice 16
+//         glm::vec3(-1.25f, 0.0f, 1.25f),     // Vértice 17
 
-        // Vértices inferiores
-        // Coordenadas x, y, z
-        glm::vec3(0.0f, -1.25f, 0.0f),       // Vértice 18
-        glm::vec3(1.25f, -1.25f, 0.0f),      // Vértice 19
-        glm::vec3(-1.25f, -1.25f, 0.0f),     // Vértice 20
-        glm::vec3(0.0f, -1.25f, -1.25f),     // Vértice 21
-        glm::vec3(1.25f, -1.25f, -1.25f),    // Vértice 22
-        glm::vec3(-1.25f, -1.25f, -1.25f),   // Vértice 23
-        glm::vec3(0.0f, -1.25f, 1.25f),      // Vértice 24
-        glm::vec3(1.25f, -1.25f, 1.25f),     // Vértice 25
-        glm::vec3(-1.25f, -1.25f, 1.25f)     // Vértice 26
-    };
+//         // Vértices inferiores
+//         // Coordenadas x, y, z
+//         glm::vec3(0.0f, -1.25f, 0.0f),       // Vértice 18
+//         glm::vec3(1.25f, -1.25f, 0.0f),      // Vértice 19
+//         glm::vec3(-1.25f, -1.25f, 0.0f),     // Vértice 20
+//         glm::vec3(0.0f, -1.25f, -1.25f),     // Vértice 21
+//         glm::vec3(1.25f, -1.25f, -1.25f),    // Vértice 22
+//         glm::vec3(-1.25f, -1.25f, -1.25f),   // Vértice 23
+//         glm::vec3(0.0f, -1.25f, 1.25f),      // Vértice 24
+//         glm::vec3(1.25f, -1.25f, 1.25f),     // Vértice 25
+//         glm::vec3(-1.25f, -1.25f, 1.25f)     // Vértice 26
+//     };
 
 
 
 
     // ################# VERTICES SHADERS ##########################################
 
-    // world space positions of our cubes
-    // identificadores
-    unsigned int VBO, VAO;// id buffer ->id vertices 
-    glGenVertexArrays(1, &VAO); // 1 arreglo de verices  asigna a VAO
-    glGenBuffers(1, &VBO);// 1 arreglo de buffer de vertices y asigna a VBO
+    // // world space positions of our cubes
+    // // identificadores
+    // unsigned int VBO, VAO;// id buffer ->id vertices 
+    // glGenVertexArrays(1, &VAO); // 1 arreglo de verices  asigna a VAO
+    // glGenBuffers(1, &VBO);// 1 arreglo de buffer de vertices y asigna a VBO
 
-    //enlace VAO y VBO para configuraciones
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //se envia vertices a VBO
+    // //enlace VAO y VBO para configuraciones
+    // glBindVertexArray(VAO);
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //se envia vertices a VBO
 
-    // atributo de posiciones en el shader
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // atributo de coordenadas de textura de los vertices en el shader
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    // // atributo de posiciones en el shader
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    // glEnableVertexAttribArray(0);
+    // // atributo de coordenadas de textura de los vertices en el shader
+    // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    // glEnableVertexAttribArray(1);
     // ################# END VERTICES SHADERS ##########################################
 
 
 
     // ################ TEXTURAS ##########################################################
-    // load and create a texture
-    unsigned int texture1, texture2;//ids para las texturas
+    // // load and create a texture
+    // unsigned int texture1, texture2;//ids para las texturas
 
-    // texture 1 
-    glGenTextures(1, &texture1);//id
-    glBindTexture(GL_TEXTURE_2D, texture1);// se puede hacer  operaciones con textura
+    // // texture 1 
+    // glGenTextures(1, &texture1);//id
+    // glBindTexture(GL_TEXTURE_2D, texture1);// se puede hacer  operaciones con textura
 
-    // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // set texture filtering parameters SUAVIZADO
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
-    // load image, create texture and generate mipmaps
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-    unsigned char *data = stbi_load(getPath("blue.jpg").c_str(), &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
+    // // set the texture wrapping parameters
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // // set texture filtering parameters SUAVIZADO
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 
-    // texture 2
-    glGenTextures(1, &texture2);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-    // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // load image, create texture and generate mipmaps
-    data = stbi_load(getPath("awesomeface.png").c_str(), &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        // note that the awesomeface.png has transparency and thus an alpha channel, so make sure to tell OpenGL the data type is of GL_RGBA
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
+    // // load image, create texture and generate mipmaps
+    // int width, height, nrChannels;
+    // stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+    // unsigned char *data = stbi_load(getPath("blue.jpg").c_str(), &width, &height, &nrChannels, 0);
+    // if (data)
+    // {
+    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    //     glGenerateMipmap(GL_TEXTURE_2D);
+    // }
+    // else
+    // {
+    //     std::cout << "Failed to load texture" << std::endl;
+    // }
+    // stbi_image_free(data);
 
-    // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
-    // -------------------------------------------------------------------------------------------
-    ourShader.use();
-    ourShader.setInt("texture1", 0);//indices de textura
-    ourShader.setInt("texture2", 1);
 
-    // pass projection matrix to shader (as projection matrix rarely changes there's no need to do this per frame)
-    // trasnsforma 3d -> 2D: carga los idetntificadores de textura en la matriz para q se pueda renderizar
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    ourShader.setMat4("projection", projection);
+    // // texture 2
+    // glGenTextures(1, &texture2);
+    // glBindTexture(GL_TEXTURE_2D, texture2);
+    // // set the texture wrapping parameters
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // // set texture filtering parameters
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // // load image, create texture and generate mipmaps
+    // data = stbi_load(getPath("awesomeface.png").c_str(), &width, &height, &nrChannels, 0);
+    // if (data)
+    // {
+    //     // note that the awesomeface.png has transparency and thus an alpha channel, so make sure to tell OpenGL the data type is of GL_RGBA
+    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    //     glGenerateMipmap(GL_TEXTURE_2D);
+    // }
+    // else
+    // {
+    //     std::cout << "Failed to load texture" << std::endl;
+    // }
+    // stbi_image_free(data);
+
+    // // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
+    // // -------------------------------------------------------------------------------------------
+    // ourShader.use();
+    // ourShader.setInt("texture1", 0);//indices de textura
+    // ourShader.setInt("texture2", 1);
+
+    // // pass projection matrix to shader (as projection matrix rarely changes there's no need to do this per frame)
+    // // trasnsforma 3d -> 2D: carga los idetntificadores de textura en la matriz para q se pueda renderizar
+    // glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    // ourShader.setMat4("projection", projection);
 
     //################################# END TEXTURAS ######################################################################
 
+    cube.configShader_Textures();
+    cube2.configShader_Textures();
 
     while (!glfwWindowShouldClose(window))
     {
@@ -522,11 +533,12 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//clear buffer
 
         // bind textures on corresponding texture units
-        glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, texture2);
+        // glActiveTexture(GL_TEXTURE0); glBindTexture(GL_TEXTURE_2D, texture1);
+        // glActiveTexture(GL_TEXTURE1); glBindTexture(GL_TEXTURE_2D, texture2);
+
 
         // activate shader
-        ourShader.use();
+        // ourShader.use();
 
 //        // camera/view transformation
 //        glm::mat4 view = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
@@ -540,30 +552,31 @@ int main()
 
         // ############## MATRICES #######################################################
         // pass projection matrix to shader (note that in this case it could change every frame)
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        ourShader.setMat4("projection", projection);
+        // glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        // ourShader.setMat4("projection", projection);
 
         // camera/view transformation
-        glm::mat4 view = camera.GetViewMatrix();
-        ourShader.setMat4("view", view);
-         // ############## END MATRICES ###################################################
+        // glm::mat4 view = camera.GetViewMatrix();
+        // ourShader.setMat4("view", view);
+        //  // ############## END MATRICES ###################################################
 
-        // ################ CUBES RENDER ###################################################
-        glBindVertexArray(VAO);
-        for (unsigned int i = 0; i < 27; i++)
-        {
-            // calculate the model matrix for each object and pass it to shader before drawing
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            //float angle = 20.0f * i;
-            //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            ourShader.setMat4("model", model);
+        // // ################ CUBES RENDER ###################################################
+        // glBindVertexArray(VAO);
+        // for (unsigned int i = 0; i < 27; i++)
+        // {
+        //     // calculate the model matrix for each object and pass it to shader before drawing
+        //     glm::mat4 model = glm::mat4(1.0f);
+        //     model = glm::translate(model, cubePositions[i]);
+        //     //float angle = 20.0f * i;
+        //     //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        //     ourShader.setMat4("model", model);
 
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        //     glDrawArrays(GL_TRIANGLES, 0, 36);
+        // }
 
          // ################ END CUBES RENDER ##################################################
-
+        cube.draw();
+        cube2.draw();
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -571,8 +584,8 @@ int main()
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    // glDeleteVertexArrays(1, &VAO);
+    // glDeleteBuffers(1, &VBO);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
