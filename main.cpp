@@ -19,6 +19,8 @@
 #include <iostream>
 #include <vector>
 
+// #include <thread>
+
 using namespace std;
 
 
@@ -386,28 +388,50 @@ public:
         }
     }
 
+    void swap(){
 
+    }
 
     void RotateRow(int col_index){
+
         glm::vec3 RowCenter = *(cubes[col_index][1][1]->center);
+        vector<vector<Cube*>> temp(rows, vector<Cube*>(cols));
+
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                cubes[col_index][i][j]->rotateVertical(45.0f,RowCenter);
+                cubes[col_index][i][j]->rotateVertical(90.0f,RowCenter);
+                //guardar en temp
+                temp[i][j] = cubes[col_index][i][j];
+            }
+        }
+
+        //reasignar posiciones cubos 
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                cubes[col_index][2-j][i] = temp[i][j];
             }
         }
     }
 
     void RotateColumn(int col_index) {
         glm::vec3 RowCenter = *(cubes[1][col_index][1]->center);
-         for (int i = 0; i < rows; i++) {
+        vector<vector<Cube*>> temp(rows, vector<Cube*>(cols));
+
+        for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                cubes[i][col_index][j]->rotateHorizontal(45.0f,RowCenter);
+                cubes[i][col_index][j]->rotateHorizontal(90.0f,RowCenter);
+                //guardar en temp
+                temp[i][j] = cubes[i][col_index][j];
+            }
+        }
+
+        //reasignar posiciones cubos 
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                cubes[2-j][col_index][i] = temp[i][j];
             }
         }
     }
-
-
-
 
 
     ~Rubik() {
@@ -445,7 +469,7 @@ void processInput(GLFWwindow *window,Rubik* rubik)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){
-         rubik->RotateColumn(0);
+        rubik->RotateColumn(0);
         cout<<"\nrotate col 0";
     }
      if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
@@ -568,6 +592,10 @@ int main()
     // cube.configShader_Textures();
     // cube2.configShader_Textures();
     // cube3.configShader_Textures();
+
+    // enum {
+    //     col0, col1,col2,col3
+    // }
 
     while (!glfwWindowShouldClose(window))
     {
