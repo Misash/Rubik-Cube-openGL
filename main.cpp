@@ -19,7 +19,6 @@
 #include <iostream>
 #include <vector>
 
-// #include <thread>
 
 using namespace std;
 
@@ -165,20 +164,20 @@ class Cube{
        
         ourShader->setMat4("model", model);
          // Imprimir los elementos de la matriz model
-        cout<<"\nModel:\n";
+        // cout<<"\nModel:\n";
         // cout<< glm::to_string(model[0])<<endl;
         // cout<< glm::to_string(model[1])<<endl;
         // cout<< glm::to_string(model[2])<<endl;
         // cout<< glm::to_string(model[3])<<endl;
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                std::cout << model[i][j] << " ";
-            }
-            std::cout << std::endl;
-        }
-        //apply our model matrix to the center
+        // for (int i = 0; i < 4; ++i) {
+        //     for (int j = 0; j < 4; ++j) {
+        //         std::cout << model[i][j] << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
+        // //apply our model matrix to the center
  
-        cout<<"\nCEnter:\n"<<center->x<<" , "<<center->y<<" , "<<center->z;
+        // cout<<"\nCEnter:\n"<<center->x<<" , "<<center->y<<" , "<<center->z;
 
         // bind textures on corresponding texture units
          for (int i = 0; i < 6; i++) {
@@ -337,12 +336,12 @@ class Rubik {
 public:
     int rows,cols,depths;
     vector<vector<vector<Cube*>>> cubes;
-    
+    vector<vector<Cube*>> temp;
 
     Rubik(){
         rows = cols = depths = 3;
         cubes.resize(rows, vector<vector<Cube*>>(cols, vector<Cube*>(depths)));
-
+        temp.resize(rows, vector<Cube*>(cols));
         float offset = 1.25f;
         int i,j,k;
         i = j = k = 0;
@@ -388,22 +387,21 @@ public:
         }
     }
 
-    void swap(){
 
-    }
 
-    void RotateRow(int col_index){
+    void RotateRow(int col_index,float angle,int speed){
 
         glm::vec3 RowCenter = *(cubes[col_index][1][1]->center);
-        vector<vector<Cube*>> temp(rows, vector<Cube*>(cols));
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                cubes[col_index][i][j]->rotateVertical(90.0f,RowCenter);
+                cubes[col_index][i][j]->rotateVertical(angle,RowCenter);
                 //guardar en temp
-                temp[i][j] = cubes[col_index][i][j];
+                if(speed == 1) temp[i][j] = cubes[col_index][i][j];
             }
         }
+
+        if(speed*angle != 90) return;
 
         //reasignar posiciones cubos 
         for (int i = 0; i < rows; i++) {
@@ -413,17 +411,19 @@ public:
         }
     }
 
-    void RotateColumn(int col_index) {
+    void RotateColumn(int col_index, float angle, int speed) {
         glm::vec3 RowCenter = *(cubes[1][col_index][1]->center);
-        vector<vector<Cube*>> temp(rows, vector<Cube*>(cols));
+        
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                cubes[i][col_index][j]->rotateHorizontal(90.0f,RowCenter);
-                //guardar en temp
-                temp[i][j] = cubes[i][col_index][j];
+                cubes[i][col_index][j]->rotateHorizontal(angle,RowCenter);
+                //guardar en temp en la primera iteracion
+                if(speed == 1) temp[i][j] = cubes[i][col_index][j];
             }
         }
+
+        if(speed*angle != 90) return;
 
         //reasignar posiciones cubos 
         for (int i = 0; i < rows; i++) {
@@ -455,43 +455,95 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 // void processInput(GLFWwindow *window);
 // void processInput(GLFWwindow *window, Rubik* rubik);
-void processInput(GLFWwindow *window,Rubik* rubik)
+
+
+void processInput(GLFWwindow *window,Rubik* rubik,float angle,string& status, int& speed)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+            glfwSetWindowShouldClose(window, true);
+   
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){
-        rubik->RotateColumn(0);
-        cout<<"\nrotate col 0";
+    if( status == "NO"){
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            camera.ProcessKeyboard(FORWARD, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            camera.ProcessKeyboard(BACKWARD, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            camera.ProcessKeyboard(LEFT, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            camera.ProcessKeyboard(RIGHT, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){
+            rubik->RotateColumn(0,angle,speed);
+            status = "COL0";
+            speed++;
+            cout<<"\nrotate col 0";
+        }
+        if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
+            rubik->RotateColumn(1,angle,speed);
+            status = "COL1";
+            speed++;
+            cout<<"\nrotate col 1";
+        }
+        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
+            rubik->RotateColumn(2,angle,speed);
+            status = "COL2";
+            speed++;
+            cout<<"\nrotate col 2";
+        }
+        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS){
+            rubik->RotateRow(0,angle,speed);
+            status = "ROW0";
+            speed++;
+            cout<<"\nrotate row 0";
+        }
+        if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){
+            rubik->RotateRow(1,angle,speed);
+            status = "ROW1";
+            speed++;
+            cout<<"\nrotate row 1";
+        }
+        if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS){
+            rubik->RotateRow(2,angle,speed);
+            status = "ROW2";
+            speed++;
+            cout<<"\nrotate row 2";
+        }
+    }else{
+
+        if(status == "COL0"){
+            rubik->RotateColumn(0,angle,speed);
+            cout<<"\nrotate col 0";
+        }
+        if(status == "COL1"){
+            rubik->RotateColumn(1,angle,speed);
+            cout<<"\nrotate col 1";
+        }
+        if(status == "COL2"){
+            rubik->RotateColumn(2,angle,speed);
+            cout<<"\nrotate col 2";
+        }
+        if(status == "ROW0"){
+            rubik->RotateRow(0,angle,speed);
+            cout<<"\nrotate row 0";
+        }
+        if(status == "ROW1"){
+            rubik->RotateRow(1,angle,speed);
+            cout<<"\nrotate row 1";
+        }
+        if(status == "ROW2"){
+            rubik->RotateRow(2,angle,speed);
+            cout<<"\nrotate row 2";
+        }
+
+        if(angle*speed >= 90){
+            status = "NO";
+            speed = 1;
+        }else{
+            speed++;
+        }
+
     }
-     if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
-         rubik->RotateColumn(1);
-        cout<<"\nrotate col 1";
-    }
-     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
-         rubik->RotateColumn(2);
-        cout<<"\nrotate col 2";
-    }
-    if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS){
-         rubik->RotateRow(0);
-        cout<<"\nrotate row 0";
-    }
-    if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){
-         rubik->RotateRow(1);
-        cout<<"\nrotate row 1";
-    }
-    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS){
-         rubik->RotateRow(2);
-        cout<<"\nrotate row 2";
-    }
+   
 
 }
 
@@ -593,9 +645,20 @@ int main()
     // cube2.configShader_Textures();
     // cube3.configShader_Textures();
 
-    // enum {
-    //     col0, col1,col2,col3
+    // enum rotatingCubes{
+    //     NO,
+    //     COL0,
+    //     COL1,
+    //     COL2,
+    //     ROW0,
+    //     ROW1,
+    //     ROW2
     // }
+
+
+    float incrementAngle = 45.0f;
+    string status = "NO";
+    int speed = 1;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -605,7 +668,13 @@ int main()
         lastFrame = currentFrame;
 
         // input
-        processInput(window,&rubikCube);
+        
+        cout<<"\n\nSTATUS: "<<status<<"  SPEED: "<<speed;
+        processInput(window,&rubikCube,incrementAngle,status,speed);
+        
+        
+
+        
 
         // color para la pantalla de color 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
