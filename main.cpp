@@ -28,7 +28,7 @@ const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 9.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -61,14 +61,14 @@ string getPath(string filename){
         }
     }
 
-    std::cout << "El path es: " << escapedPath << std::endl;
+    // std::cout << "El path es: " << escapedPath << std::endl;
     return escapedPath;
 }
 
 
 class Cube{
     public:
-
+    glm::vec4 worldspace_center;
     glm::vec3* center;
     unsigned int VBO, VAO; // IDs para los buffers de vértices
     unsigned int textures[6]; // IDs para las texturas de cada lado
@@ -81,9 +81,12 @@ class Cube{
         //center
         center = new glm::vec3(x,y,z);
         ourShader = new Shader(getPath("shader.vs").c_str(), getPath("shader.fs").c_str());
-        model = glm::mat4(1.0f); 
-        model = glm::translate(model, *center);
-
+        model = glm::mat4(1.0f); //matriz identidad
+        // model = glm::scale(model, glm::vec3(2.0f,2.0f,2.0f)); //matriz de traslacion 
+        model = glm::translate(model, *center); //matriz de traslacion 
+        worldspace_center = model * glm::vec4(center->x,center->y,center->z,1);
+        // center = new glm::vec3(worldspace_center.x,worldspace_center.y,worldspace_center.z);
+        
         float vertices_[] = {
             // Cara frontal
             -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Vértice inferior izquierdo
@@ -156,8 +159,24 @@ class Cube{
 
         // calculate the model matrix for each object and pass it to shader before drawing
         // glm::mat4 model = glm::mat4(1.0f);
+
        
         ourShader->setMat4("model", model);
+         // Imprimir los elementos de la matriz model
+        cout<<"\nModel:\n";
+        // cout<< glm::to_string(model[0])<<endl;
+        // cout<< glm::to_string(model[1])<<endl;
+        // cout<< glm::to_string(model[2])<<endl;
+        // cout<< glm::to_string(model[3])<<endl;
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                std::cout << model[i][j] << " ";
+            }
+            std::cout << std::endl;
+        }
+        //apply our model matrix to the center
+ 
+        cout<<"\nCEnter:\n"<<center->x<<" , "<<center->y<<" , "<<center->z;
 
         // bind textures on corresponding texture units
          for (int i = 0; i < 6; i++) {
@@ -233,9 +252,74 @@ class Cube{
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
 
-    void rotateX(float angle) {
+    void rotateHorizontal_(float angle,glm::vec3 center_) {
+        // center = center_;
+
+        // Trasladar al centro de rotación
+        model = glm::translate(model, -center_);
+
+        // Realizar la rotación
         model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
+
+        // Regresar a la posición original
+        model = glm::translate(model, center_);
     }
+
+    void rotateHorizontal(float angle, const glm::vec3& center_) {
+        // model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
+
+        // Trasladar al centro de rotación
+        model = glm::translate(model, -center_);
+
+        // Realizar la rotación horizontal en funcion al centro dado 
+        glm::mat4 Rotation = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = Rotation * model;
+
+        // Regresar a la posición original
+        model = glm::translate(model, center_);
+    }
+
+    void rotateVertical(float angle, const glm::vec3& center_) {
+        // model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        // Trasladar al centro de rotación
+        model = glm::translate(model, -center_);
+
+        // Realizar la rotación horizontal en funcion al centro dado 
+        glm::mat4 Rotation = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = Rotation * model;
+
+        // Regresar a la posición original
+        model = glm::translate(model, center_);
+    }
+
+  
+
+    void rotateAroundCenter(float angle, const glm::vec3& center_) {
+
+
+        // Trasladar al centro de rotación
+        model = glm::translate(model, -center_);
+
+        glm::vec3 ratio = *center - center_;
+
+        // Realizar la rotación horizontal en funcion al centro dado gira 45 grados
+        glm::mat4 verticalRotation = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
+        model = verticalRotation * model;
+
+        
+
+        // // Realizar la rotación vertical
+        // glm::mat4 verticalRotation = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+        // model = verticalRotation * model;
+
+        // Regresar a la posición original
+        model = glm::translate(model, center_);
+
+        // cout<<"\ncentro: "<< center->x<<" , "<<center->y<<" , "<<center->z;  
+    }
+
+
 
     // ~Cube() {
     //     delete[] vertices;
@@ -303,15 +387,38 @@ public:
     }
 
 
-    ~Rubik() {
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            for (int k = 0; k < depths; k++) {
-                delete cubes[i][j][k];
+
+    void RotateRow(int col_index){
+        glm::vec3 RowCenter = *(cubes[col_index][1][1]->center);
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                cubes[col_index][i][j]->rotateVertical(45.0f,RowCenter);
             }
         }
     }
-}
+
+    void RotateColumn(int col_index) {
+        glm::vec3 RowCenter = *(cubes[1][col_index][1]->center);
+         for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                cubes[i][col_index][j]->rotateHorizontal(45.0f,RowCenter);
+            }
+        }
+    }
+
+
+
+
+
+    ~Rubik() {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                for (int k = 0; k < depths; k++) {
+                    delete cubes[i][j][k];
+                }
+            }
+        }
+    }
 
 
 
@@ -323,7 +430,88 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 // void processInput(GLFWwindow *window);
-void processInput(GLFWwindow *window, Cube* cube);
+// void processInput(GLFWwindow *window, Rubik* rubik);
+void processInput(GLFWwindow *window,Rubik* rubik)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){
+         rubik->RotateColumn(0);
+        cout<<"\nrotate col 0";
+    }
+     if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
+         rubik->RotateColumn(1);
+        cout<<"\nrotate col 1";
+    }
+     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
+         rubik->RotateColumn(2);
+        cout<<"\nrotate col 2";
+    }
+    if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS){
+         rubik->RotateRow(0);
+        cout<<"\nrotate row 0";
+    }
+    if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){
+         rubik->RotateRow(1);
+        cout<<"\nrotate row 1";
+    }
+    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS){
+         rubik->RotateRow(2);
+        cout<<"\nrotate row 2";
+    }
+
+}
+
+
+// void processInput(GLFWwindow *window,Cube* rubik)
+// {
+//     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+//         glfwSetWindowShouldClose(window, true);
+
+//     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+//         camera.ProcessKeyboard(FORWARD, deltaTime);
+//     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+//         camera.ProcessKeyboard(BACKWARD, deltaTime);
+//     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+//         camera.ProcessKeyboard(LEFT, deltaTime);
+//     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+//         camera.ProcessKeyboard(RIGHT, deltaTime);
+//     if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){
+//          rubik->rotateAroundCenter(15.0f,glm::vec3(0.0f, 0.0f, 0.0f));
+//         cout<<"\nrotate col 0";
+//     }
+    //  if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
+    //      rubik->RotateColumn(1);
+    //     cout<<"\nrotate col 1";
+    // }
+    //  if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
+    //      rubik->RotateColumn(2);
+    //     cout<<"\nrotate col 2";
+    // }
+    // if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS){
+    //      rubik->RotateRow(0);
+    //     cout<<"\nrotate row 0";
+    // }
+    // if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){
+    //      rubik->RotateRow(1);
+    //     cout<<"\nrotate row 1";
+    // }
+    // if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS){
+    //      rubik->RotateRow(2);
+    //     cout<<"\nrotate row 2";
+    // }
+    
+       
+// }
 
 int main()
 {
@@ -369,17 +557,17 @@ int main()
     // build and compile our shader zprogram
     // ------------------------------------
 
-    // Rubik rubikCube;
+    Rubik rubikCube;
 
-    // rubikCube.load_Shaders_Textures();
+    rubikCube.load_Shaders_Textures();
 
-    Cube cube(0.0f, 0.0f, 0.0f);
-    Cube cube2(0.0f, 1.25f, 1.25f);
-    Cube cube3(0.0f, -1.25f, 1.25f);
+    // Cube cube(0.0f, 0.0f, 0.0f);
+    // Cube cube2(0.0f, 1.25f, 0.0f);
+    // Cube cube3(0.0f, -1.25f, 1.25f);
    
-    cube.configShader_Textures();
-    cube2.configShader_Textures();
-    cube3.configShader_Textures();
+    // cube.configShader_Textures();
+    // cube2.configShader_Textures();
+    // cube3.configShader_Textures();
 
     while (!glfwWindowShouldClose(window))
     {
@@ -389,7 +577,7 @@ int main()
         lastFrame = currentFrame;
 
         // input
-        processInput(window,&cube);
+        processInput(window,&rubikCube);
 
         // color para la pantalla de color 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -397,11 +585,11 @@ int main()
 
 
         
-        cube.draw();
-        cube2.draw();
-        cube3.draw();
+        // cube.draw();
+        // cube2.draw();
+        // cube3.draw();
 
-        // rubikCube.draw();
+        rubikCube.draw();
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -422,26 +610,7 @@ int main()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window,Cube* cube)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
-         cube->rotateX(45.0f);
-        cout<<"\nrotate x";
-    }
-       
-       
-}
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
