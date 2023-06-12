@@ -1,5 +1,3 @@
-
-
 #define GLAD_GL_IMPLEMENTATION
 #include <glad/gl.h>
 #define GLFW_INCLUDE_NONE
@@ -22,11 +20,16 @@
 
 using namespace std;
 
-
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void processInput(GLFWwindow *window);
+//void key_callback (GLFWwindow *window,Rubik* rubik,\
+float angle,string& status, int& speed);
 
 // settings
-const unsigned int SCR_WIDTH = 1000;
-const unsigned int SCR_HEIGHT = 1000;
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 9.0f));
@@ -140,7 +143,6 @@ class Cube{
 
         
          std::memcpy(vertices, vertices_, sizeof(vertices));
-        
     }
 
     
@@ -449,29 +451,10 @@ public:
 
 };
 
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-// void processInput(GLFWwindow *window);
-// void processInput(GLFWwindow *window, Rubik* rubik);
-
-
-void processInput(GLFWwindow *window,Rubik* rubik,float angle,string& status, int& speed)
+void key_callback(GLFWwindow *window,Rubik* rubik,float angle,string& status, int& speed)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, true);
-   
-
     if( status == "NO"){
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            camera.ProcessKeyboard(FORWARD, deltaTime);
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            camera.ProcessKeyboard(BACKWARD, deltaTime);
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            camera.ProcessKeyboard(LEFT, deltaTime);
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            camera.ProcessKeyboard(RIGHT, deltaTime);
+        //yikes    
         if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){
             rubik->RotateColumn(0,angle,speed);
             status = "COL0";
@@ -508,7 +491,7 @@ void processInput(GLFWwindow *window,Rubik* rubik,float angle,string& status, in
             speed++;
             cout<<"\nrotate row 2";
         }
-    }else{
+        }else{
 
         if(status == "COL0"){
             rubik->RotateColumn(0,angle,speed);
@@ -538,7 +521,7 @@ void processInput(GLFWwindow *window,Rubik* rubik,float angle,string& status, in
         if(angle*speed >= 90){
             status = "NO";
             speed = 1;
-        }else{
+         }else{
             speed++;
         }
 
@@ -546,48 +529,6 @@ void processInput(GLFWwindow *window,Rubik* rubik,float angle,string& status, in
    
 
 }
-
-
-// void processInput(GLFWwindow *window,Cube* rubik)
-// {
-//     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-//         glfwSetWindowShouldClose(window, true);
-
-//     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-//         camera.ProcessKeyboard(FORWARD, deltaTime);
-//     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-//         camera.ProcessKeyboard(BACKWARD, deltaTime);
-//     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-//         camera.ProcessKeyboard(LEFT, deltaTime);
-//     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-//         camera.ProcessKeyboard(RIGHT, deltaTime);
-//     if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){
-//          rubik->rotateAroundCenter(15.0f,glm::vec3(0.0f, 0.0f, 0.0f));
-//         cout<<"\nrotate col 0";
-//     }
-    //  if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
-    //      rubik->RotateColumn(1);
-    //     cout<<"\nrotate col 1";
-    // }
-    //  if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
-    //      rubik->RotateColumn(2);
-    //     cout<<"\nrotate col 2";
-    // }
-    // if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS){
-    //      rubik->RotateRow(0);
-    //     cout<<"\nrotate row 0";
-    // }
-    // if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){
-    //      rubik->RotateRow(1);
-    //     cout<<"\nrotate row 1";
-    // }
-    // if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS){
-    //      rubik->RotateRow(2);
-    //     cout<<"\nrotate row 2";
-    // }
-    
-       
-// }
 
 int main()
 {
@@ -615,6 +556,10 @@ int main()
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // window cambia
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+    //glfwSetKeyCallback(window, key_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// glad: load all OpenGL function pointers
 	// ---------------------------------------
@@ -623,9 +568,6 @@ int main()
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
-
-
-
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
@@ -668,20 +610,15 @@ int main()
         lastFrame = currentFrame;
 
         // input
+        processInput(window);
         
-        cout<<"\n\nSTATUS: "<<status<<"  SPEED: "<<speed;
-        processInput(window,&rubikCube,incrementAngle,status,speed);
+        cout<<"\n\nSTATUS: "<<status<<"  SPEED?: "<<speed;
+        key_callback(window,&rubikCube,incrementAngle,status,speed);
         
-        
-
-        
-
         // color para la pantalla de color 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//clear buffer
 
-
-        
         // cube.draw();
         // cube2.draw();
         // cube3.draw();
@@ -707,7 +644,19 @@ int main()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-
+void processInput(GLFWwindow* window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+}
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
@@ -717,7 +666,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
 }
-
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
