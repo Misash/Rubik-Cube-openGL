@@ -154,7 +154,7 @@ class Cube{
 
     void draw(){
     
-             // camera/view transformation
+        // camera/view transformation
         glm::mat4 view = camera.GetViewMatrix();
         ourShader->setMat4("view", view);
 
