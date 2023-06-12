@@ -656,7 +656,7 @@ int main()
     // }
 
 
-    float incrementAngle = 45.0f;
+    float incrementAngle = 30.0f;
     string status = "NO";
     int speed = 1;
 
