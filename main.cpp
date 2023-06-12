@@ -559,6 +559,7 @@ int main()
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
     //glfwSetKeyCallback(window, key_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// glad: load all OpenGL function pointers
 	// ---------------------------------------
@@ -590,6 +591,7 @@ int main()
         lastFrame = currentFrame;
 
         // input
+        processInput(window);
         
         cout<<"\n\nSTATUS: "<<status<<"  SPEED?: "<<speed;
         key_callback(window,&rubikCube,incrementAngle,status,speed);
