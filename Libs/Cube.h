@@ -136,6 +136,20 @@ class Cube{
         model = glm::translate(model, center_);
     }
 
+    void rotateDepth(float angle, const glm::vec3& center_) {
+        // model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        // Trasladar al centro de rotación
+        model = glm::translate(model, -center_);
+
+        // Realizar la rotación horizontal en funcion al centro dado 
+        glm::mat4 Rotation = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = Rotation * model;
+
+        // Regresar a la posición original
+        model = glm::translate(model, center_);
+    }
+
 
 };
 

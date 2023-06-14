@@ -9,6 +9,7 @@ public:
     vector<vector<vector<Cube*>>> cubes;
     vector<vector<Cube*>> temp;
     float vertices[180];
+    float reverse;
     unsigned int VBO, VAO; // IDs para los buffers de vértices
     unsigned int textures[6]; // IDs para las texturas de cada lado
 
@@ -19,6 +20,7 @@ public:
         float offset = 1.25f;
         int i,j,k;
         i = j = k = 0;
+        reverse = 1.0f;
 
         //create cubes
         for (float y = offset; y >= -offset && i < rows; y -= offset, i++){
@@ -187,7 +189,7 @@ public:
             }
         }
 
-        if(speed*angle != 90) return;
+        if(speed*angle != reverse*90) return;
 
         //reasignar posiciones cubos 
         for (int i = 0; i < rows; i++) {
@@ -209,7 +211,7 @@ public:
             }
         }
 
-        if(speed*angle != 90) return;
+        if(speed*angle != reverse*90) return;
 
         //reasignar posiciones cubos 
         for (int i = 0; i < rows; i++) {
@@ -217,6 +219,29 @@ public:
                 cubes[2-j][col_index][i] = temp[i][j];
             }
         }
+    }
+
+    void RotateDepth(int col_index, float angle, int speed) {
+        glm::vec3 RowCenter = *(cubes[1][1][col_index]->center);
+        
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                cubes[i][j][col_index]->rotateDepth(angle,RowCenter);
+                //guardar en temp en la primera iteracion
+                if(speed == 1) temp[i][j] = cubes[i][j][col_index];
+            }
+        }
+
+        if(speed*angle != reverse*90) return;
+
+        //reasignar posiciones cubos 
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                cubes[2-j][i][col_index] = temp[i][j];
+            }
+        }
+
     }
 
 

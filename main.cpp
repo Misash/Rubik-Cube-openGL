@@ -50,9 +50,17 @@ float lastFrame = 0.0f;
 
 void key_callback(GLFWwindow *window,Rubik* rubik,float angle,string& status, int& speed)
 {
-    cout<<"\n\nSTATUS: "<<status<<"  SPEED?: "<<speed;
+    // cout<<"\n\nSTATUS: "<<status<<"  SPEED?: "<<speed;
+    
+
     if( status == "NO"){
-        //yikes    
+
+        if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
+            rubik->reverse = -1.0f * rubik->reverse;
+            cout<<"REVERSE: "<<rubik->reverse;
+        }
+       
+        //columns
         if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){
             rubik->RotateColumn(0,angle,speed);
             status = "COL0";
@@ -71,6 +79,7 @@ void key_callback(GLFWwindow *window,Rubik* rubik,float angle,string& status, in
             speed++;
             cout<<"\nrotate col 2";
         }
+        //Rows
         if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS){
             rubik->RotateRow(0,angle,speed);
             status = "ROW0";
@@ -83,13 +92,33 @@ void key_callback(GLFWwindow *window,Rubik* rubik,float angle,string& status, in
             speed++;
             cout<<"\nrotate row 1";
         }
-        if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS){
-            rubik->RotateRow(2,angle,speed);
+        if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS){
+            rubik->RotateDepth(2,angle,speed);
             status = "ROW2";
             speed++;
             cout<<"\nrotate row 2";
         }
-        }else{
+        //Depths
+        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS){
+            rubik->RotateDepth(0,angle,speed);
+            status = "DEPTH0";
+            speed++;
+            cout<<"\nrotate depth 0";
+        }
+        if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS){
+            rubik->RotateDepth(1,angle,speed);
+            status = "DEPTH1";
+            speed++;
+            cout<<"\nrotate depth 1";
+        }
+        if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS){
+            rubik->RotateDepth(2,angle,speed);
+            status = "DEPTH2";
+            speed++;
+            cout<<"\nrotate depth 2";
+        }
+
+    }else{
 
         if(status == "COL0"){
             rubik->RotateColumn(0,angle,speed);
@@ -108,15 +137,30 @@ void key_callback(GLFWwindow *window,Rubik* rubik,float angle,string& status, in
             cout<<"\nrotate row 0";
         }
         if(status == "ROW1"){
-            rubik->RotateRow(1,angle,speed);
+            rubik->RotateDepth(1,angle,speed);
             cout<<"\nrotate row 1";
         }
         if(status == "ROW2"){
-            rubik->RotateRow(2,angle,speed);
+            rubik->RotateDepth(2,angle,speed);
+            cout<<"\nrotate row 2";
+        }
+        if(status == "DEPTH0"){
+            rubik->RotateDepth(0,angle,speed);
+            cout<<"\nrotate row 0";
+        }
+        if(status == "DEPTH1"){
+            rubik->RotateDepth(1,angle,speed);
+            cout<<"\nrotate row 1";
+        }
+        if(status == "DEPTH2"){
+            rubik->RotateDepth(2,angle,speed);
             cout<<"\nrotate row 2";
         }
 
-        if(angle*speed >= 90){
+
+
+
+        if(angle*speed == rubik->reverse*90){
             status = "NO";
             speed = 1;
          }else{
@@ -202,7 +246,7 @@ int main()
         processInput(window);
         
         //cout<<"\n\nSTATUS: "<<status<<"  SPEED?: "<<speed;
-        key_callback(window,&rubikCube,incrementAngle,status,speed);
+        key_callback(window,&rubikCube,rubikCube.reverse*incrementAngle,status,speed);
         
         // color para la pantalla de color 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
